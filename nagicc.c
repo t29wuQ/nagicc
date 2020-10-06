@@ -6,7 +6,11 @@
 #include<ctype.h>
 
 typedef enum {
-    TK_RESERVED,
+    TK_OPERATOR,
+    TK_EQUAL, // ==
+    TK_NEQUAL, // !=
+    TK_LESSEQ, // <=
+    TK_GREATEQ, // >=
     TK_NUM,
     TK_EOF,
 } TokenKind;
@@ -25,6 +29,10 @@ typedef enum {
     ND_SUB,
     ND_MUL,
     ND_DIV,
+    ND_LESS,
+    ND_EQUAL, // ==
+    ND_NEQUAL, // !=
+    ND_LESSEQ, // <=
     ND_NUM,
 } NodeKind;
 
@@ -77,7 +85,15 @@ Node *new_node_num(int val) {
 }
 
 bool consume(char op) {
-    if (token->kind != TK_RESERVED || token->str[0] != op) {
+    if (token->kind != TK_OPERATOR || token->str[0] != op) {
+        return false;
+    }
+    token = token->next;
+    return true;
+}
+
+bool consume_token(TokenKind kind) {
+    if (token->kind != kind) {
         return false;
     }
     token = token->next;
@@ -86,7 +102,7 @@ bool consume(char op) {
 
 
 void expect(char op) {
-    if (token->kind != TK_RESERVED || token->str[0] != op) {
+    if (token->kind != TK_OPERATOR || token->str[0] != op) {
         error("'%c'ではありません", op);
     }
     token = token->next;
@@ -124,8 +140,48 @@ Token *tokenize(char *p) {
         }
 
         if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')') {
-            cur = new_token(TK_RESERVED, cur, p++);
+            cur = new_token(TK_OPERATOR, cur, p++);
             continue;
+        }
+
+        if (*p == '=') {
+            p++;
+            if (*p == '=') {
+                cur = new_token(TK_EQUAL, cur, p++);
+                continue;
+            }
+        }
+
+        if (*p == '!') {
+            p++;
+            if (*p == '=') {
+                cur = new_token(TK_NEQUAL, cur, p++);
+                continue;
+            }
+        }
+
+        if (*p == '<') {
+            p++;
+            if (*p == '=') {
+                cur = new_token(TK_LESSEQ, cur, p++);
+                continue;
+            } else {
+                p--;
+                cur = new_token(TK_OPERATOR, cur, p++);
+                continue;
+            }
+        }
+
+        if (*p == '>') {
+            p++;
+            if (*p == '=') {
+                cur = new_token(TK_GREATEQ, cur, p++);
+                continue;
+            } else {
+                p--;
+                cur = new_token(TK_OPERATOR, cur, p++);
+                continue;
+            }
         }
 
         if (isdigit(*p)) {
@@ -141,11 +197,48 @@ Token *tokenize(char *p) {
     return head.next;
 }
 
+Node *equality();
+Node *relational();
+Node *add();
 Node *mul();
 Node *unary();
 Node *primary();
 
 Node *expr() {
+    return equality();
+}
+
+Node *equality() {
+    Node *node = relational();
+
+    for (;;) {
+        if (consume_token(TK_EQUAL))
+            node = new_node(ND_EQUAL, node, relational());
+        else if (consume_token(TK_NEQUAL))
+            node = new_node(ND_NEQUAL, node, relational());
+        else
+            return node;
+    }
+}
+
+Node *relational() {
+    Node *node = add();
+    
+    for (;;) {
+        if (consume('<'))
+            node = new_node(ND_LESS, node, add());
+        else if (consume('>'))
+            node = new_node(ND_LESS, add(), node);
+        else if (consume_token(TK_LESSEQ))
+            node = new_node(ND_LESSEQ, node, add());
+        else if (consume_token(TK_GREATEQ))
+            node = new_node(ND_LESSEQ, add(), node);
+        else
+            return node;
+    }
+}
+
+Node *add() {
     Node *node = mul();
 
     for (;;) {
@@ -215,6 +308,26 @@ void gen(Node *node) {
     case ND_DIV:
         printf("  cqo\n");
         printf("  idiv rdi\n");
+        break;
+    case ND_EQUAL:
+        printf("  cmp rax, rdi\n");
+        printf("  sete al\n");
+        printf("  movzb rax, al\n");
+        break;
+    case ND_NEQUAL:
+        printf("  cmp rax, rdi\n");
+        printf("  setne al\n");
+        printf("  movzb rax, al\n");
+        break;
+    case ND_LESS:
+        printf("  cmp rax, rdi\n");
+        printf("  setl al\n");
+        printf("  movzb rax, al\n");
+        break;
+    case ND_LESSEQ:
+        printf("  cmp rax, rdi\n");
+        printf("  setle al\n");
+        printf("  movzb rax, al\n");
         break;
     }
 
