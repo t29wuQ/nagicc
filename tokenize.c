@@ -40,6 +40,15 @@ bool consume_token(TokenKind kind) {
     return true;
 }
 
+Token *consume_ident() {
+    if (token->kind != TK_IDENT) {
+        return NULL;
+    }
+    Token *tok = token;
+    token = token->next;
+    return tok;
+}
+
 void expect(char op) {
     if (token->kind != TK_OPERATOR || token->str[0] != op) {
         error("'%c'ではありません", op);
@@ -54,6 +63,10 @@ int expect_number() {
     int val = token->val;
     token = token->next;
     return val;
+}
+
+bool at_eof() {
+    return token->kind == TK_EOF;
 }
 
 Token *new_token(TokenKind kind, Token *cur, char *str) {
@@ -84,6 +97,10 @@ void tokenize(char *p) {
             p++;
             if (*p == '=') {
                 cur = new_token(TK_EQUAL, cur, p++);
+                continue;
+            } else {
+                p--;
+                cur = new_token(TK_OPERATOR, cur, p++);
                 continue;
             }
         }
@@ -120,9 +137,19 @@ void tokenize(char *p) {
             }
         }
 
+        if (*p == ';') {
+            cur = new_token(TK_OPERATOR, cur, p++);
+            continue;
+        }
+
         if (isdigit(*p)) {
             cur = new_token(TK_NUM, cur, p);
             cur->val = strtol(p, &p, 10);
+            continue;
+        }
+
+        if ('a' <= *p  && *p <= 'z') {
+            cur = new_token(TK_IDENT, cur, p++);
             continue;
         }
 
