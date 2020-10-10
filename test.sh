@@ -38,5 +38,8 @@ assert 2 "2 < 3;1 + 1;"
 assert 3 "a = 3;"
 assert 3 "a = 3;a;"
 assert 3 "z = 3;1 == 1;z;"
+assert 3 "a1_1a = 3;a1_1a;"
+assert 3 "_1111 =  3;_1111;"
+assert 3 "aA = 3;aa = 4;aA;"
 
 echo OK

@@ -6,6 +6,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    locals = calloc(1, sizeof(LVar));
     tokenize(argv[1]);
     program();
 
@@ -13,9 +14,12 @@ int main(int argc, char **argv) {
     printf(".globl main\n");
     printf("main:\n");
 
+    
     printf("  push rbp\n");
     printf("  mov rbp, rsp\n");
-    printf("  sub rsp, 208\n");
+    if (locals->offset > 0) {
+        printf("  sub rsp, %d\n", locals->offset);
+    }
 
     int i = 0;
     for (i = 0; code[i]; i++) {

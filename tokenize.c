@@ -24,16 +24,10 @@ void error_at(char *loc, char *fmt, ...) {
     exit(1);
 }
 
-bool consume(char op) {
-    if (token->kind != TK_OPERATOR || token->str[0] != op) {
-        return false;
-    }
-    token = token->next;
-    return true;
-}
-
-bool consume_token(TokenKind kind) {
-    if (token->kind != kind) {
+bool consume(char *op) {
+    if (token->kind != TK_RESERVED ||
+        strlen(op) != token->len ||
+        memcmp(token->str, op, token->len)) {
         return false;
     }
     token = token->next;
@@ -50,7 +44,7 @@ Token *consume_ident() {
 }
 
 void expect(char op) {
-    if (token->kind != TK_OPERATOR || token->str[0] != op) {
+    if (token->kind != TK_RESERVED || token->str[0] != op) {
         error("'%c'ではありません", op);
     }
     token = token->next;
@@ -69,10 +63,11 @@ bool at_eof() {
     return token->kind == TK_EOF;
 }
 
-Token *new_token(TokenKind kind, Token *cur, char *str) {
+Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
     Token *tok = calloc(1, sizeof(Token));
     tok->kind = kind;
     tok->str = str;
+    tok->len = len;
     cur->next = tok;
     return tok;
 }
@@ -86,21 +81,24 @@ void tokenize(char *p) {
     while (*p) {
         if (isspace(*p)) {
             p++;
+            continue;
         }
 
         if (*p == '+' || *p == '-' || *p == '*' || *p == '/' || *p == '(' || *p == ')') {
-            cur = new_token(TK_OPERATOR, cur, p++);
+            cur = new_token(TK_RESERVED, cur, p++, 1);
             continue;
         }
 
         if (*p == '=') {
             p++;
             if (*p == '=') {
-                cur = new_token(TK_EQUAL, cur, p++);
+                p--;
+                cur = new_token(TK_RESERVED, cur, p, 2);
+                p += 2;
                 continue;
             } else {
                 p--;
-                cur = new_token(TK_OPERATOR, cur, p++);
+                cur = new_token(TK_RESERVED, cur, p++, 1);
                 continue;
             }
         }
@@ -108,7 +106,9 @@ void tokenize(char *p) {
         if (*p == '!') {
             p++;
             if (*p == '=') {
-                cur = new_token(TK_NEQUAL, cur, p++);
+                p--;
+                cur = new_token(TK_RESERVED, cur, p, 2);
+                p += 2;
                 continue;
             }
         }
@@ -116,11 +116,13 @@ void tokenize(char *p) {
         if (*p == '<') {
             p++;
             if (*p == '=') {
-                cur = new_token(TK_LESSEQ, cur, p++);
+                p--;
+                cur = new_token(TK_RESERVED, cur, p, 2);
+                p += 2;
                 continue;
             } else {
                 p--;
-                cur = new_token(TK_OPERATOR, cur, p++);
+                cur = new_token(TK_RESERVED, cur, p++, 1);
                 continue;
             }
         }
@@ -128,34 +130,47 @@ void tokenize(char *p) {
         if (*p == '>') {
             p++;
             if (*p == '=') {
-                cur = new_token(TK_GREATEQ, cur, p++);
+                p--;
+                cur = new_token(TK_RESERVED, cur, p, 2);
+                p += 2;
                 continue;
             } else {
                 p--;
-                cur = new_token(TK_OPERATOR, cur, p++);
+                cur = new_token(TK_RESERVED, cur, p++, 1);
                 continue;
             }
         }
 
         if (*p == ';') {
-            cur = new_token(TK_OPERATOR, cur, p++);
+            cur = new_token(TK_RESERVED, cur, p++, 1);
             continue;
         }
 
         if (isdigit(*p)) {
-            cur = new_token(TK_NUM, cur, p);
+            cur = new_token(TK_NUM, cur, p, 0);
             cur->val = strtol(p, &p, 10);
             continue;
         }
 
-        if ('a' <= *p  && *p <= 'z') {
-            cur = new_token(TK_IDENT, cur, p++);
+        if (('a' <= *p  && *p <= 'z') ||
+            ('A' <= *p && *p <= 'Z') ||
+            *p == '_') {
+            int count = 1;
+            ++p;
+            while (('a' <= *p  && *p <= 'z') ||
+                    ('A' <= *p && *p <= 'Z') ||
+                    *p == '_' ||
+                    ('0' <= *p && *p <= '9')) {
+                ++count;
+                ++p;
+            }
+            cur = new_token(TK_IDENT, cur, p - count, count);
             continue;
         }
 
         error_at(p, "トークナイズできません");
     }
 
-    new_token(TK_EOF, cur, p);
+    new_token(TK_EOF, cur, p, 0);
     token = head.next;
 }

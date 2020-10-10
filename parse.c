@@ -15,6 +15,14 @@ Node *new_node_num(int val) {
     return node;
 }
 
+LVar *find_lvar(Token *tok) {
+    LVar *var;
+    for (var = locals; var; var = var->next) {
+        if (var->len == tok->len && !memcmp(tok->str, var->name, var->len))
+            return var;
+    }
+    return NULL;
+}
 
 Node *stmt();
 Node *expr();
@@ -46,7 +54,7 @@ Node *expr() {
 
 Node *assign() {
     Node *node = equality();
-    if (consume('=')) {
+    if (consume("=")) {
         node = new_node(ND_ASSIGN, node, assign());
     }
     return node;
@@ -56,9 +64,10 @@ Node *equality() {
     Node *node = relational();
 
     for (;;) {
-        if (consume_token(TK_EQUAL))
+        if (consume("==")) {
             node = new_node(ND_EQUAL, node, relational());
-        else if (consume_token(TK_NEQUAL))
+        }
+        else if (consume("!="))
             node = new_node(ND_NEQUAL, node, relational());
         else
             return node;
@@ -69,13 +78,13 @@ Node *relational() {
     Node *node = add();
     
     for (;;) {
-        if (consume('<'))
+        if (consume("<"))
             node = new_node(ND_LESS, node, add());
-        else if (consume('>'))
+        else if (consume(">"))
             node = new_node(ND_LESS, add(), node);
-        else if (consume_token(TK_LESSEQ))
+        else if (consume("<="))
             node = new_node(ND_LESSEQ, node, add());
-        else if (consume_token(TK_GREATEQ))
+        else if (consume(">="))
             node = new_node(ND_LESSEQ, add(), node);
         else
             return node;
@@ -86,9 +95,9 @@ Node *add() {
     Node *node = mul();
 
     for (;;) {
-        if (consume('+'))
+        if (consume("+"))
             node = new_node(ND_ADD, node, mul());
-        else if (consume('-'))
+        else if (consume("-"))
             node = new_node(ND_SUB, node, mul());
         else
             return node;
@@ -99,9 +108,9 @@ Node *mul() {
     Node *node = unary();
 
     for (;;) {
-        if (consume('*')) 
+        if (consume("*")) 
             node = new_node(ND_MUL, node, unary());
-        else if(consume('/'))
+        else if(consume("/"))
             node = new_node(ND_DIV, node, unary());
         else
             return node;
@@ -109,16 +118,16 @@ Node *mul() {
 }
 
 Node *unary() {
-    if (consume('+'))
+    if (consume("+"))
         return primary();
-    else if (consume('-'))
+    else if (consume("-"))
         return new_node(ND_SUB, new_node_num(0), primary());
     else
         return primary();
 }
 
 Node *primary() {
-    if (consume('(')) {
+    if (consume("(")) {
         Node *node = expr();
         expect(')');
         return node;
@@ -128,7 +137,19 @@ Node *primary() {
     if (tok) {
         Node *node = calloc(1, sizeof(Node));
         node->kind = ND_LVAR;
-        node->offset = (tok->str[0] - 'a' + 1) * 8; 
+
+        LVar *lvar = find_lvar(tok);
+        if (lvar) {
+            node->offset = lvar->offset;
+        } else {
+            lvar = calloc(1, sizeof(LVar));
+            lvar->next = locals;
+            lvar->name = tok->str;
+            lvar->len = tok->len;
+            lvar->offset = locals->offset + 8;
+            node->offset = lvar->offset;
+            locals = lvar;
+        }
         return node;
     }
 
