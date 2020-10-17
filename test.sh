@@ -41,5 +41,8 @@ assert 3 "z = 3;1 == 1;z;"
 assert 3 "a1_1a = 3;a1_1a;"
 assert 3 "_1111 =  3;_1111;"
 assert 3 "aA = 3;aa = 4;aA;"
+assert 3 "a = 4;return 3;"
+assert 3 "a = 4;return 3;a = 6;"
+assert 4 "a = 4;return;a = 6;"
 
 echo OK

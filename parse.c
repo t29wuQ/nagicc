@@ -43,7 +43,17 @@ void program() {
 }
 
 Node *stmt() {
-    Node *node = expr();
+    Node *node;
+    if (consume_token(TK_RETURN)) {
+        if (ahead_semicolon()) {
+            expect(';');
+            node = new_node(ND_RETURN, NULL, NULL);
+            return node;
+        }
+        node = new_node(ND_RETURN, NULL, expr());
+    } else {
+        node = expr();
+    }
     expect(';');
     return node;
 }
