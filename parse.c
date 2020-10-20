@@ -51,6 +51,17 @@ Node *stmt() {
             return node;
         }
         node = new_node(ND_RETURN, NULL, expr());
+    } else if (consume_token(TK_IF)) {
+        node = calloc(1, sizeof(Node));
+        node->kind = ND_IF;
+        expect('(');
+        node->cond = expr();
+        expect(')');
+        node->then = stmt();
+        if (consume_token(TK_ELSE)) {
+            node->els = stmt();
+        }
+        return node;
     } else {
         node = expr();
     }

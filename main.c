@@ -24,9 +24,10 @@ int main(int argc, char **argv) {
     int i = 0;
     for (i = 0; code[i]; i++) {
         gen(code[i]);
-        printf("  pop rax\n");
+        // printf("  pop rax\n");
     }
 
+    printf(".L.return:\n");
     printf("  mov rsp, rbp\n");
     printf("  pop rbp\n");
     printf("  ret\n");

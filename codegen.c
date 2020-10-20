@@ -1,5 +1,7 @@
 #include "nagicc.h"
 
+int label = 0;
+
 void gen_lval(Node *node) {
     if (node->kind != ND_LVAR) {
         error("代入の左辺値が変数ではありません");
@@ -11,13 +13,28 @@ void gen_lval(Node *node) {
 
 void gen(Node *node) {
     switch (node->kind) {
+    case ND_IF:
+        gen(node->cond);
+        printf("  pop rax\n");
+        printf("  cmp rax, 0\n");
+        int l = label++;
+        if (node->els)
+            printf("  je .L.else.%d\n", l);
+        else
+            printf("  je .L.end.%d\n", l);
+        gen(node->then);
+        printf("  jmp .L.end.%d\n", l);
+        if (node->els) {
+            printf(".L.else.%d:\n", l);
+            gen(node->els);
+        }
+        printf(".L.end.%d:\n", l);
+        return;
     case ND_RETURN:
         if (node->rhs)
             gen(node->rhs);
         printf("  pop rax\n");
-        printf("  mov rsp, rbp\n");
-        printf("  pop rbp\n");
-        printf("  ret\n");
+        printf("  jmp .L.return\n");
         return;
     case ND_NUM:
         printf("  push %d\n", node->val);
