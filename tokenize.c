@@ -96,6 +96,19 @@ int is_alnum(char c) {
         ('0' <= c && c <= '9');
 }
 
+char *is_reserved_keyword(char *c) {
+    char *keyword[] = {"return", "if", "else"}; 
+
+    int i;
+    for (i = 0; i < sizeof(keyword) / sizeof(*keyword); ++i) {
+        int len = strlen(keyword[i]);
+        if (strncmp(c, keyword[i], len) == 0 && !is_alnum(c[len])) {
+            return keyword[i];
+        }
+    }
+    return NULL;
+}
+
 void tokenize(char *p) {
     Token head;
     head.next = NULL;
@@ -176,21 +189,11 @@ void tokenize(char *p) {
             continue;
         }
 
-        if (strncmp(p, "return", 6) == 0 && !is_alnum(p[6])) {
-            cur = new_token(TK_RETURN, cur, p, 6);
-            p += 6;
-            continue;
-        }
-
-        if (strncmp(p, "if", 2) == 0 && !is_alnum(p[2])) {
-            cur = new_token(TK_IF, cur, p, 2);
-            p += 2;
-            continue;
-        }
-
-        if (strncmp(p, "else", 4) == 0 && !is_alnum(p[4])) {
-            cur = new_token(TK_ELSE, cur, p, 4);
-            p += 4;
+        char *keyword = is_reserved_keyword(p);
+        if (keyword) {
+            int len = strlen(keyword);
+            cur = new_token(TK_RESERVED, cur, keyword, len);
+            p += len;
             continue;
         }
 

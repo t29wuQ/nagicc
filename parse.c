@@ -44,21 +44,21 @@ void program() {
 
 Node *stmt() {
     Node *node;
-    if (consume_token(TK_RETURN)) {
+    if (consume("return")) {
         if (ahead_semicolon()) {
             expect(';');
             node = new_node(ND_RETURN, NULL, NULL);
             return node;
         }
         node = new_node(ND_RETURN, NULL, expr());
-    } else if (consume_token(TK_IF)) {
+    } else if (consume("if")) {
         node = calloc(1, sizeof(Node));
         node->kind = ND_IF;
         expect('(');
         node->cond = expr();
         expect(')');
         node->then = stmt();
-        if (consume_token(TK_ELSE)) {
+        if (consume("else")) {
             node->els = stmt();
         }
         return node;
