@@ -97,7 +97,7 @@ int is_alnum(char c) {
 }
 
 char *is_reserved_keyword(char *c) {
-    char *keyword[] = {"return", "if", "else"}; 
+    char *keyword[] = {"return", "if", "else", "while"}; 
 
     int i;
     for (i = 0; i < sizeof(keyword) / sizeof(*keyword); ++i) {

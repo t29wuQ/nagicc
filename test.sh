@@ -48,6 +48,8 @@ assert 2 "if (1 == 1) return 2; return 3;"
 assert 3 "if (1 != 1) return 2; return 3;"
 assert 3 "a = 4;if (a == 4)return 3;else return 2;"
 assert 2 "a = 4;if (a != 4)return 3;else return 2;"
+assert 3 "a = 0; while (a < 3) a = a + 1; return a;"
+assert 0 "a = 0; while (a == 1) a = a + 1; return a;"
 
 
 echo OK
