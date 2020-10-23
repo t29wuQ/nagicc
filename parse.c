@@ -70,6 +70,18 @@ Node *stmt() {
         expect(')');
         node->then = stmt();
         return node;
+    } else if (consume("for")) {
+        node = calloc(1, sizeof(Node));
+        node->kind = ND_FOR;
+        expect('(');
+        node->lhs = expr();
+        expect(';');
+        node->cond = expr();
+        expect(';');
+        node->rhs = expr();
+        expect(')');
+        node->then = stmt();
+        return node;
     } else {
         node = expr();
     }

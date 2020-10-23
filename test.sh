@@ -50,6 +50,8 @@ assert 3 "a = 4;if (a == 4)return 3;else return 2;"
 assert 2 "a = 4;if (a != 4)return 3;else return 2;"
 assert 3 "a = 0; while (a < 3) a = a + 1; return a;"
 assert 0 "a = 0; while (a == 1) a = a + 1; return a;"
+assert 5 "b = 0; for(a = 0; a < 5; a = a + 1) b = b + 1; return b;"
+assert 5 "b = 0; for(a = 0; a < 5; a = a + 1) b = b + 1; return a;"
 
 
 echo OK
