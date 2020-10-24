@@ -84,6 +84,10 @@ void gen(Node *node) {
         printf("  mov [rax], rdi\n");
         printf("  push rdi\n");
         return;
+    case ND_CALL_FUNC:
+        printf("  call %s\n", node->funcname);
+        printf("  push rax\n");
+        return;
     default:
         break;
     }

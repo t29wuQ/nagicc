@@ -1,10 +1,13 @@
 #!/bin/bash
+cc -c -o tmp2 ./test/call_func.c
+
 assert() {
   expected="$1"
   input="$2"
 
   ./nagicc "$input" > tmp.s
-  cc -o tmp tmp.s
+  cc -c -o tmp1 tmp.s
+  cc tmp1 tmp2 -o tmp
   ./tmp
   actual="$?"
 
@@ -57,5 +60,6 @@ assert 3 "if (1 != 1) {b = 4; return b;} else {b = 3; return b;}"
 assert 8 "{a = 5; b = a + 3; return b;}"
 assert 3 "if (1 == 1) {if (1 != 1) a = 4; else {a = 3;return a;} } else {b = 5; return b;}"
 assert 9 "a = 0;count = 0; while (a < 10) { if(a == 2){ a = a + 2; b = 0; } else { a = a + 1; } count = count + 1; } return count;"
+assert 3 "return return3();"
 
 echo OK

@@ -204,10 +204,7 @@ void tokenize(char *p) {
             *p == '_') {
             int count = 1;
             ++p;
-            while (('a' <= *p  && *p <= 'z') ||
-                    ('A' <= *p && *p <= 'Z') ||
-                    *p == '_' ||
-                    ('0' <= *p && *p <= '9')) {
+            while (is_alnum(*p)) {
                 ++count;
                 ++p;
             }
