@@ -52,6 +52,10 @@ assert 3 "a = 0; while (a < 3) a = a + 1; return a;"
 assert 0 "a = 0; while (a == 1) a = a + 1; return a;"
 assert 5 "b = 0; for(a = 0; a < 5; a = a + 1) b = b + 1; return b;"
 assert 5 "b = 0; for(a = 0; a < 5; a = a + 1) b = b + 1; return a;"
-
+assert 4 "if (1 == 1) {b = 4; return b;}return 3;"
+assert 3 "if (1 != 1) {b = 4; return b;} else {b = 3; return b;}"
+assert 8 "{a = 5; b = a + 3; return b;}"
+assert 3 "if (1 == 1) {if (1 != 1) a = 4; else {a = 3;return a;} } else {b = 5; return b;}"
+assert 9 "a = 0;count = 0; while (a < 10) { if(a == 2){ a = a + 2; b = 0; } else { a = a + 1; } count = count + 1; } return count;"
 
 echo OK

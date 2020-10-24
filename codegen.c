@@ -13,6 +13,13 @@ void gen_lval(Node *node) {
 
 void gen(Node *node) {
     switch (node->kind) {
+    case ND_BLOCK:
+        node = node->next;
+        while (node) {
+            gen(node);
+            node = node->next;
+        }
+        return;
     case ND_IF:
         gen(node->cond);
         printf("  pop rax\n");
@@ -77,6 +84,8 @@ void gen(Node *node) {
         printf("  mov [rax], rdi\n");
         printf("  push rdi\n");
         return;
+    default:
+        break;
     }
     
     gen(node->lhs);
@@ -118,6 +127,8 @@ void gen(Node *node) {
         printf("  cmp rax, rdi\n");
         printf("  setle al\n");
         printf("  movzb rax, al\n");
+        break;
+    default:
         break;
     }
 

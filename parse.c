@@ -44,7 +44,19 @@ void program() {
 
 Node *stmt() {
     Node *node;
-    if (consume("return")) {
+    if (consume("{")) {
+        Node *block = new_node(ND_BLOCK, NULL, NULL);
+        node = block;
+        while (!consume("}")) {
+            if (at_eof()) {
+                fprintf(stderr, "}が存在しません");
+                exit(1);
+            }
+            node->next = stmt();
+            node = node->next;
+        }
+        return block;
+    } else if (consume("return")) {
         if (ahead_semicolon()) {
             expect(';');
             node = new_node(ND_RETURN, NULL, NULL);
