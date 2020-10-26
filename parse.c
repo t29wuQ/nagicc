@@ -192,15 +192,21 @@ Node *primary() {
         if (consume("(")) {
             node->kind = ND_CALL_FUNC;
             node->funcname = strndup(tok->str, tok->len);
-            expect(')');
+            if (!consume(")")) { 
+                Node *args = assign();
+                node->next = args;
+                while (consume(",")) {
+                    args->next = assign();
+                    args = args->next;
+                }
+                expect(')');
+            }
         } else {
             node->kind = ND_LVAR;
         }
 
         LVar *lvar = find_lvar(tok);
-        if (lvar) {
-            node->offset = lvar->offset;
-        } else {
+        if (!lvar) {
             lvar = calloc(1, sizeof(LVar));
             lvar->next = locals;
             lvar->name = tok->str;
@@ -209,6 +215,10 @@ Node *primary() {
             node->offset = lvar->offset;
             locals = lvar;
         }
+
+        if (node->kind == ND_LVAR)
+            node->offset = lvar->offset;
+
         return node;
     }
 

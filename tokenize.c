@@ -67,8 +67,6 @@ void expect(char op) {
 
 int expect_number() {
     if (token->kind != TK_NUM) {
-        fprintf(stderr, "%d\n", token->kind);
-        fprintf(stderr, "test?");
         error_at(token->str, "数ではありません");
     }
     int val = token->val;
@@ -123,7 +121,8 @@ void tokenize(char *p) {
 
         if (*p == '+' || *p == '-' || *p == '*' || *p == '/' ||
             *p == '(' || *p == ')' ||
-            *p == '{' || *p == '}') {
+            *p == '{' || *p == '}' ||
+            *p == ';' || *p == ',') {
             cur = new_token(TK_RESERVED, cur, p++, 1);
             continue;
         }
@@ -178,11 +177,6 @@ void tokenize(char *p) {
                 cur = new_token(TK_RESERVED, cur, p++, 1);
                 continue;
             }
-        }
-
-        if (*p == ';') {
-            cur = new_token(TK_RESERVED, cur, p++, 1);
-            continue;
         }
 
         if (isdigit(*p)) {

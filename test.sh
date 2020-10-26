@@ -61,5 +61,12 @@ assert 8 "{a = 5; b = a + 3; return b;}"
 assert 3 "if (1 == 1) {if (1 != 1) a = 4; else {a = 3;return a;} } else {b = 5; return b;}"
 assert 9 "a = 0;count = 0; while (a < 10) { if(a == 2){ a = a + 2; b = 0; } else { a = a + 1; } count = count + 1; } return count;"
 assert 3 "return return3();"
+assert 1 "return return_num1(1);"
+assert 2 "return return_num2(1, 1);"
+assert 3 "return return_num3(1, 1, 1);"
+assert 4 "return return_num4(1, 1, 1, 1);"
+assert 5 "return return_num5(1, 1, 1, 1, 1);"
+assert 6 "return return_num6(1, 1, 1, 1, 1, 1);"
+assert 7 "return return_num6(1 + 1, 1, 1, 1, 1, 1);"
 
 echo OK

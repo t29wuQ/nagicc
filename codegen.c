@@ -1,6 +1,7 @@
 #include "nagicc.h"
 
-int label = 0;
+static int label = 0;
+static char *argsreg[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
 
 void gen_lval(Node *node) {
     if (node->kind != ND_LVAR) {
@@ -12,6 +13,8 @@ void gen_lval(Node *node) {
 }
 
 void gen(Node *node) {
+    int l = 0;
+    int count = 0;
     switch (node->kind) {
     case ND_BLOCK:
         node = node->next;
@@ -24,7 +27,7 @@ void gen(Node *node) {
         gen(node->cond);
         printf("  pop rax\n");
         printf("  cmp rax, 0\n");
-        int l = label++;
+        l = label++;
         if (node->els)
             printf("  je .L.else.%d\n", l);
         else
@@ -85,6 +88,12 @@ void gen(Node *node) {
         printf("  push rdi\n");
         return;
     case ND_CALL_FUNC:
+        count = 0;
+        while (node->next) {
+            gen(node->next);
+            printf("  pop %s\n", argsreg[count++]);
+            node->next = node->next->next;
+        }
         printf("  call %s\n", node->funcname);
         printf("  push rax\n");
         return;
