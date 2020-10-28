@@ -94,7 +94,19 @@ void gen(Node *node) {
             printf("  pop %s\n", argsreg[count++]);
             node->next = node->next->next;
         }
+        l = label++;
+        printf("  mov rax, rsp\n");
+        printf("  and rax, 15\n");
+        printf("  jnz .L.call.%d\n", l);
+        printf("  mov rax, 0\n");
         printf("  call %s\n", node->funcname);
+        printf("  jmp .L.end.%d\n", l);
+        printf(".L.call.%d:\n", l);
+        printf("  sub rsp, 8\n");
+        printf("  mov rax, 0\n");
+        printf("  call %s\n", node->funcname);
+        printf("  add rsp, 8\n");
+        printf(".L.end.%d:\n", l);
         printf("  push rax\n");
         return;
     default:
