@@ -74,6 +74,16 @@ int expect_number() {
     return val;
 }
 
+char *expect_ident() {
+    if (token->kind != TK_IDENT) {
+        error("expected an identifer");
+    }
+    char *name = malloc(sizeof(char) * token->len);
+    memcpy(name, token->str, token->len);
+    token = token->next;
+    return name;
+}
+
 bool at_eof() {
     return token->kind == TK_EOF;
 }

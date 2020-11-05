@@ -56,17 +56,28 @@ struct Node {
     char *funcname;
 };
 
-Node *code[100];
-
-typedef struct LVar LVar;
-struct LVar {
-    LVar *next;
+typedef struct Var Var;
+struct Var {
+    Var *next;
     char *name;
     int len;
     int offset;
 };
 
-LVar *locals;
+typedef struct VarList VarList;
+struct VarList {
+    VarList *next;
+    Var *var;
+};
+
+typedef struct Function Function;
+struct Function {
+    Function *next;
+    char *name;
+    Node *code;
+    VarList *var_list;
+    int stack_size;
+};
 
 void error(char *fmt, ...);
 void tokenize(char *p);
@@ -75,8 +86,11 @@ bool consume_token(TokenKind kind);
 Token *consume_ident();
 void expect(char op);
 int expect_number();
+char *expect_ident();
 bool ahead_semicolon();
 bool at_eof();
-void program();
-void gen(Node *node);
+
+Function *program();
+
+void gen_func(Function *func);
 

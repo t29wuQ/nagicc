@@ -15,15 +15,31 @@ Node *new_node_num(int val) {
     return node;
 }
 
-LVar *find_lvar(Token *tok) {
-    LVar *var;
-    for (var = locals; var; var = var->next) {
-        if (var->len == tok->len && !memcmp(tok->str, var->name, var->len))
-            return var;
+Var *new_var(Var *next, char *name, int len, int offset) {
+    Var *var = calloc(1, sizeof(Var));
+    var->next = next;
+    var->name =name;
+    var->len = len;
+    var->offset = offset;
+    return var;
+}
+
+static VarList *var_list;
+
+Var *find_lvar(Token *tok) {
+    VarList *vl;
+    Var *var;
+    for (vl = var_list; vl; vl = vl->next) {
+        Var *var;
+        for (var = vl->var; var; var = var->next) {
+            if (var->len == tok->len && !memcmp(tok->str, var->name, var->len))
+                return var;
+        }
     }
     return NULL;
 }
 
+Function *function();
 Node *stmt();
 Node *expr();
 Node *assign();
@@ -34,12 +50,48 @@ Node *mul();
 Node *unary();
 Node *primary();
 
-void program() {
-    int i = 0;
+Function *program() {
+    Function head = {};
+    Function *cur = &head;
+
     while (!at_eof()) {
-        code[i++] = stmt();
+        cur->next = function();
+        cur = cur->next;
     }
-    code[i] = NULL;
+    return head.next;
+}
+
+Function *function() {
+    Function *func = calloc(1, sizeof(Function));
+    func->name = expect_ident();
+    expect('(');
+    func->var_list = calloc(1, sizeof(VarList));
+    if (!consume(")")) {
+        char *name = expect_ident();
+        func->var_list->var = new_var(NULL, name, strlen(name), 8);
+        Var *var = func->var_list->var;
+        while (consume(",")) {
+            name = expect_ident();
+            var->next = new_var(NULL, name, strlen(name), var->offset + 8);
+            var = var->next;
+        }
+        expect(')');
+    }
+    var_list = func->var_list;
+    var_list->next = calloc(1, sizeof(VarList));
+    var_list->next->var = calloc(1, sizeof(Var));
+    expect('{');
+    func->code = new_node(ND_BLOCK, NULL, NULL);
+    Node *node = func->code;
+    while (!consume("}")) {
+        if (at_eof()) {
+            fprintf(stderr, "}が存在しません");
+            exit(1);
+        }
+        node->next = stmt();
+        node = node->next;
+    }
+    return func;
 }
 
 Node *stmt() {
@@ -205,19 +257,15 @@ Node *primary() {
             node->kind = ND_LVAR;
         }
 
-        LVar *lvar = find_lvar(tok);
-        if (!lvar) {
-            lvar = calloc(1, sizeof(LVar));
-            lvar->next = locals;
-            lvar->name = tok->str;
-            lvar->len = tok->len;
-            lvar->offset = locals->offset + 8;
-            node->offset = lvar->offset;
-            locals = lvar;
+        Var *var = find_lvar(tok);
+        if (!var) {
+            var = new_var(var_list->next->var, tok->str, tok->len, var_list->next->var->offset + 8);
+            node->offset = var->offset;
+            var_list->next->var = var;
         }
 
         if (node->kind == ND_LVAR)
-            node->offset = lvar->offset;
+            node->offset = var->offset;
 
         return node;
     }

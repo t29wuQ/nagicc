@@ -1,6 +1,7 @@
 #include "nagicc.h"
 
-static int label = 0;
+static int label = 1;
+static char *func_name;
 static char *argsreg[] = {"rdi", "rsi", "rdx", "rcx", "r8", "r9"};
 
 void gen_lval(Node *node) {
@@ -68,7 +69,7 @@ void gen(Node *node) {
         if (node->rhs)
             gen(node->rhs);
         printf("  pop rax\n");
-        printf("  jmp .L.return\n");
+        printf("  jmp .L.return.%s\n", func_name);
         return;
     case ND_NUM:
         printf("  push %d\n", node->val);
@@ -158,4 +159,23 @@ void gen(Node *node) {
     }
 
     printf("  push rax\n");
+}
+
+void gen_func(Function *func) {
+    printf("%s:\n", func->name);
+    printf("  push rbp\n");
+    printf("  mov rbp, rsp\n");
+    Var *args;
+    int args_count = 0;
+    for (args = func->var_list->var; args; args = args->next) {
+        printf("  push %s\n", argsreg[args_count++]);
+        if (!args && func->var_list->next->var)
+            printf("  sub rsp, %d\n", func->var_list->next->var->offset);
+    }
+    func_name = func->name;
+    gen(func->code);
+    printf(".L.return.%s:\n", func_name);
+    printf("  mov rsp, rbp\n");
+    printf("  pop rbp\n");
+    printf("  ret\n");
 }
