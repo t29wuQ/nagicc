@@ -78,5 +78,7 @@ assert 3 "add(a, b, c){return a + b + c;} main(){return add(1, 1, 1);}"
 assert 4 "add(a, b, c, d){return a + b + c + d;} main(){return add(1, 1, 1, 1);}"
 assert 5 "add(a, b, c, d, e){return a + b + c + d + e;} main(){return add(1, 1, 1, 1, 1);}"
 assert 6 "add(a, b, c, d, e, f){return a + b + c + d + e + f;} main(){return add(1, 1, 1, 1, 1, 1);}"
+assert 3 "main() {x = 3; y = &x; return *y;}"
+assert 3 "main() {x=3; y=&x; z=&y; return **z;}"
 
 echo OK
