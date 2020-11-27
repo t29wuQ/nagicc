@@ -62,6 +62,10 @@ Function *program() {
 }
 
 Function *function() {
+    if (!consume_token(TK_DATATYPE)) {
+        fprintf(stderr, "Does not start with datatype name");
+        exit(1);
+    }
     Function *func = calloc(1, sizeof(Function));
     func->name = expect_ident();
     expect('(');
@@ -242,6 +246,25 @@ Node *primary() {
         return node;
     }
 
+    if (consume_token(TK_DATATYPE)) {
+        Token *tok = consume_ident();
+        if (!tok) {
+            exit(1);
+        }
+        Node *node = calloc(1, sizeof(Node));
+        node->kind = ND_LVAR;
+        Var *var = find_lvar(tok);
+        if (!var) {
+            var = new_var(var_list->next->var, tok->str, tok->len, var_list->next->var->offset + 8);
+            node->offset = var->offset;
+            var_list->next->var = var;
+            return node;
+        } else {
+            fprintf(stderr, "error: redefinition %s", tok->str);
+            exit(1);
+        }
+    }
+
     Token *tok = consume_ident();
     if (tok) {
         Node *node = calloc(1, sizeof(Node));
@@ -257,15 +280,15 @@ Node *primary() {
                 }
                 expect(')');
             }
+            return node;
         } else {
             node->kind = ND_LVAR;
         }
 
         Var *var = find_lvar(tok);
         if (!var) {
-            var = new_var(var_list->next->var, tok->str, tok->len, var_list->next->var->offset + 8);
-            node->offset = var->offset;
-            var_list->next->var = var;
+            fprintf(stderr, "error: use of undeclared identifier %s", tok->str);
+            exit(1);
         }
 
         if (node->kind == ND_LVAR)

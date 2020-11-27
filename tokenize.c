@@ -104,16 +104,31 @@ int is_alnum(char c) {
         ('0' <= c && c <= '9');
 }
 
+static char *keywords[] = {"return", "if", "else", "while", "for"}; 
 char *is_reserved_keyword(char *c) {
-    char *keyword[] = {"return", "if", "else", "while", "for"}; 
-
     int i;
-    for (i = 0; i < sizeof(keyword) / sizeof(*keyword); ++i) {
-        int len = strlen(keyword[i]);
-        if (strncmp(c, keyword[i], len) == 0 && !is_alnum(c[len])) {
-            return keyword[i];
+    // search keyward
+    for (i = 0; i < sizeof(keywords) / sizeof(*keywords); ++i) {
+        int len = strlen(keywords[i]);
+        if (strncmp(c, keywords[i], len) == 0 && !is_alnum(c[len])) {
+            return keywords[i];
         }
     }
+
+    return NULL;
+}
+
+static char *datatypes[] = {"int"};
+char *is_reserved_datatype(char *c) {
+    int i;
+    // search datatype
+    for (i = 0; i < sizeof(datatypes) / sizeof(*datatypes); ++i) {
+        int len = strlen(datatypes[i]);
+        if (strncmp(c, datatypes[i], len) == 0 && !is_alnum(c[len])) {
+            return datatypes[i];
+        }
+    }
+
     return NULL;
 }
 
@@ -200,6 +215,14 @@ void tokenize(char *p) {
         if (keyword) {
             int len = strlen(keyword);
             cur = new_token(TK_RESERVED, cur, keyword, len);
+            p += len;
+            continue;
+        }
+
+        char *datatype = is_reserved_datatype(p);
+        if (datatype) {
+            int len = strlen(datatype);
+            cur = new_token(TK_DATATYPE, cur, datatype, len);
             p += len;
             continue;
         }

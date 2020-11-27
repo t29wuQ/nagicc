@@ -7,6 +7,7 @@
 
 typedef enum {
     TK_RESERVED,
+    TK_DATATYPE,
     TK_IDENT,
     TK_NUM,
     TK_EOF,
